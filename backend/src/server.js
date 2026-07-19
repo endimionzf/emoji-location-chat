@@ -939,11 +939,12 @@ app.get('/api/admin/stats', authenticateToken, async (req, res) => {
 // --- WEBSOCKET HANDLERS & CONNECTION UPGRADE ---
 
 server.on('upgrade', (request, socket, head) => {
-  // Extract token from query parameters: ws://localhost/ws?token=JWT_TOKEN
+  console.log('[WebSocket Upgrade] Request URL:', request.url);
   const parsedUrl = new URL(request.url, 'http://localhost');
   const token = parsedUrl.searchParams.get('token');
 
   if (!token) {
+    console.log('[WebSocket Upgrade] No token provided, rejecting.');
     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
     socket.destroy();
     return;
@@ -951,11 +952,13 @@ server.on('upgrade', (request, socket, head) => {
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) {
+      console.log('[WebSocket Upgrade] JWT verification failed:', err.message);
       socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
       socket.destroy();
       return;
     }
 
+    console.log(`[WebSocket Upgrade] Token valid for user ${decoded.id}. Handling upgrade...`);
     wss.handleUpgrade(request, socket, head, (ws) => {
       ws.user = decoded;
       wss.emit('connection', ws, request);

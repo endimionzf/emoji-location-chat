@@ -49,6 +49,7 @@ export default function App() {
   // Refs
   const wsRef = useRef(null);
   const lastLocationSentRef = useRef(0);
+  const [wsReconnectKey, setWsReconnectKey] = useState(0);
 
   const avatars = ['🦊', '🐱', '🐼', '🦁', '🐸', '🐨', '🐙', '🦖', '🦄', '🐝'];
 
@@ -194,84 +195,104 @@ export default function App() {
   useEffect(() => {
     if (!token) return;
 
-    // Connect to WebSocket using relative protocol
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
-    
-    console.log('[WebSocket] Connecting to:', wsUrl);
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
+    let closedByCleanup = false;
+    let reconnectTimer;
 
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        console.log('[WebSocket] Message received:', msg);
+    const connect = () => {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
 
-        switch (msg.type) {
-          case 'emoji:new':
-            setEmojiDrops((prev) => [msg.data, ...prev]);
-            break;
-          case 'emoji:deleted':
-            setEmojiDrops((prev) => prev.filter((d) => d.id !== msg.data.id));
-            break;
-          case 'emoji:moved':
-            setEmojiDrops((prev) => 
-              prev.map(d => d.id === msg.data.id ? { ...d, latitude: msg.data.latitude, longitude: msg.data.longitude } : d)
-            );
-            break;
-          case 'request:incoming':
-            setIncomingRequests((prev) => [msg.data, ...prev]);
-            break;
-          case 'request:status_changed':
-            setOutgoingRequests((prev) =>
-              prev.map((r) => (r.id === msg.data.id ? { ...r, status: msg.data.status } : r))
-            );
-            // If active chat belongs to this request, notify or adjust status
-            if (activeChatRef.current && activeChatRef.current.id === msg.data.id) {
-              setActiveChat((prev) => prev ? { ...prev, status: msg.data.status } : null);
-            }
-            break;
-          case 'chat:message':
-            if (activeChatRef.current && activeChatRef.current.id === msg.data.join_request_id) {
-              setChatMessages((prev) => {
-                if (prev.some(m => m.id === msg.data.id)) return prev;
-                return [...prev, msg.data];
+      console.log('[WebSocket] Connecting to:', wsUrl);
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        console.log('[WebSocket] Connected');
+      };
+
+      ws.onerror = (event) => {
+        console.error('[WebSocket] Connection error:', event);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          console.log('[WebSocket] Message received:', msg);
+
+          switch (msg.type) {
+            case 'emoji:new':
+              setEmojiDrops((prev) => {
+                if (prev.some((d) => d.id === msg.data.id)) return prev;
+                return [msg.data, ...prev];
               });
+              break;
+            case 'emoji:deleted':
+              setEmojiDrops((prev) => prev.filter((d) => d.id !== msg.data.id));
+              break;
+            case 'emoji:moved':
+              setEmojiDrops((prev) =>
+                prev.map((d) =>
+                  d.id === msg.data.id
+                    ? { ...d, latitude: msg.data.latitude, longitude: msg.data.longitude }
+                    : d
+                )
+              );
+              break;
+            case 'request:incoming':
+              setIncomingRequests((prev) => [msg.data, ...prev]);
+              break;
+            case 'request:status_changed':
+              setOutgoingRequests((prev) =>
+                prev.map((r) => (r.id === msg.data.id ? { ...r, status: msg.data.status } : r))
+              );
+              if (activeChatRef.current && activeChatRef.current.id === msg.data.id) {
+                setActiveChat((prev) => (prev ? { ...prev, status: msg.data.status } : null));
+              }
+              break;
+            case 'chat:message':
+              if (activeChatRef.current && activeChatRef.current.id === msg.data.join_request_id) {
+                setChatMessages((prev) => {
+                  if (prev.some((m) => m.id === msg.data.id)) return prev;
+                  return [...prev, msg.data];
+                });
+              }
+              break;
+            case 'range:status': {
+              const { user1, user2, in_range, distance } = msg.data;
+              const key = [user1, user2].sort().join('-');
+              setChatDistanceInfo((prev) => ({
+                ...prev,
+                [key]: { in_range, distance },
+              }));
+              break;
             }
-            break;
-          case 'range:status':
-            const { user1, user2, in_range, distance } = msg.data;
-            const key = [user1, user2].sort().join('-');
-            setChatDistanceInfo((prev) => ({
-              ...prev,
-              [key]: { in_range, distance },
-            }));
-            break;
-          case 'error':
-            alert(msg.data.message || 'An error occurred');
-            break;
-          case 'pong':
-            // heartbeat response
-            break;
-          default:
-            break;
+            case 'error':
+              alert(msg.data.message || 'An error occurred');
+              break;
+            case 'pong':
+              break;
+            default:
+              break;
+          }
+        } catch (err) {
+          console.error('[WebSocket] Failed parsing message:', err);
         }
-      } catch (err) {
-        console.error('[WebSocket] Failed parsing message:', err);
-      }
+      };
+
+      ws.onclose = () => {
+        console.log('[WebSocket] Closed.');
+        if (!closedByCleanup) {
+          reconnectTimer = setTimeout(() => {
+            setWsReconnectKey((k) => k + 1);
+          }, 5000);
+        }
+      };
+
+      return ws;
     };
 
-    ws.onclose = () => {
-      console.log('[WebSocket] Closed. Reconnecting in 5s...');
-      setTimeout(() => {
-        if (token) {
-          // Trigger a dummy re-evaluation of this effect
-          setToken((t) => t);
-        }
-      }, 5000);
-    };
+    const ws = connect();
 
-    // Heartbeat ping interval
     const pingInterval = setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: 'ping' }));
@@ -279,10 +300,12 @@ export default function App() {
     }, 30000);
 
     return () => {
+      closedByCleanup = true;
+      clearTimeout(reconnectTimer);
       clearInterval(pingInterval);
       ws.close();
     };
-  }, [token, activeChat]);
+  }, [token, wsReconnectKey]);
 
   // Geolocation watcher
   useEffect(() => {
