@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet';
 import L from 'leaflet';
 
 // Recenter helper component
@@ -35,7 +35,7 @@ function MapResizeHandler() {
   return null;
 }
 
-export default function MapView({ myLocation, emojiDrops, userId, onDropSelect, onDeleteDrop, acceptedRequests = [], onChatSelect }) {
+export default function MapView({ myLocation, locationAccuracy, emojiDrops, userId, onDropSelect, onDeleteDrop, acceptedRequests = [], onChatSelect }) {
   // Center defaults to London or coordinates if myLocation is null
   const defaultCenter = myLocation ? [myLocation.lat, myLocation.lng] : [51.505, -0.09];
 
@@ -84,15 +84,36 @@ export default function MapView({ myLocation, emojiDrops, userId, onDropSelect, 
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
 
-        {/* Current user's location marker */}
+        {/* Current user's location marker and accuracy circle */}
         {myLocation && (
-          <Marker position={[myLocation.lat, myLocation.lng]} icon={createSelfIcon()}>
-            <Popup>
-              <div style={{ color: 'var(--bg-primary)', padding: '4px' }}>
-                <strong>You are here</strong>
-              </div>
-            </Popup>
-          </Marker>
+          <>
+            {locationAccuracy && (
+              <Circle
+                center={[myLocation.lat, myLocation.lng]}
+                radius={locationAccuracy}
+                pathOptions={{
+                  color: 'var(--primary)',
+                  fillColor: 'var(--primary)',
+                  fillOpacity: 0.08,
+                  weight: 2,
+                  dashArray: '8 8',
+                  className: 'fuzzy-circle'
+                }}
+              />
+            )}
+            <Marker position={[myLocation.lat, myLocation.lng]} icon={createSelfIcon()}>
+              <Popup>
+                <div style={{ color: 'var(--bg-primary)', padding: '4px' }}>
+                  <strong>You are here</strong>
+                  {locationAccuracy && (
+                    <div style={{ fontSize: '0.8rem', marginTop: '4px' }}>
+                      Accuracy: ±{locationAccuracy}m
+                    </div>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          </>
         )}
 
         {/* Render emoji drops */}

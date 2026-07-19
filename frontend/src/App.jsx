@@ -321,7 +321,13 @@ export default function App() {
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
+        let { latitude, longitude, accuracy } = position.coords;
+        
+        // Quantize the location to a ~1000m grid (0.01 degrees is ~1.1km)
+        latitude = Math.round(latitude * 100) / 100;
+        longitude = Math.round(longitude * 100) / 100;
+        accuracy = Math.max(accuracy, 1000); // Override reported accuracy to 1000m
+
         setMyLocation({ lat: latitude, lng: longitude });
         setLocationAccuracy(Math.round(accuracy));
 
@@ -883,6 +889,7 @@ export default function App() {
       <main className="dashboard-map-container">
         <MapView
           myLocation={myLocation}
+          locationAccuracy={locationAccuracy}
           emojiDrops={emojiDrops}
           userId={user.id}
           onDropSelect={(drop) => {
