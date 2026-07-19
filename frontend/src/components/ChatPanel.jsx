@@ -11,20 +11,9 @@ export default function ChatPanel({ request, messages, user, range, onSendMessag
   // Emoji-only mode when out of range
   const emojiOnlyMode = !range.in_range;
 
-  // Build a regex that matches any emoji character so we can filter live
-  const buildEmojiRegex = () => {
-    if (!allEmojis || allEmojis.length === 0) return null;
-    // Sort longest first so multi-codepoint emojis take priority
-    const sorted = [...allEmojis].map(e => e.char).sort((a, b) => b.length - a.length);
-    const escaped = sorted.map(e => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    return new RegExp(escaped.join('|') + '|\\s', 'g');
-  };
-
   // Strip non-emoji characters from a string (used when out of range)
   const filterEmojiOnly = (text) => {
-    const regex = buildEmojiRegex();
-    if (!regex) return text; // fallback — let backend validate
-    const matches = text.match(regex);
+    const matches = text.match(/[\p{Extended_Pictographic}\p{White_Space}\u200D\uFE0F\p{Emoji_Modifier}]/gu);
     return matches ? matches.join('') : '';
   };
 

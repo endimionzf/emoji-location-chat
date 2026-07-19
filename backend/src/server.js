@@ -96,18 +96,7 @@ loadEmojis();
 const isEmojiOnly = (text) => {
   let temp = text.trim();
   if (!temp) return false;
-
-  // Sort emoji characters by length descending
-  const sortedEmojis = [...emojiList].map(e => e.char).sort((a, b) => b.length - a.length);
-
-  for (const emoji of sortedEmojis) {
-    temp = temp.replaceAll(emoji, '');
-  }
-
-  // Remove whitespace
-  temp = temp.replace(/\s+/g, '');
-
-  return temp.length === 0;
+  return /^[\p{Extended_Pictographic}\p{White_Space}\u200D\uFE0F\p{Emoji_Modifier}]+$/u.test(temp);
 };
 
 // In-memory range state storage
