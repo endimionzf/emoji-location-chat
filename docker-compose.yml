@@ -1,30 +1,6 @@
 version: '3.8'
 
 services:
-  qdrant:
-    image: qdrant/qdrant:latest
-    container_name: qdrant-emoji
-    volumes:
-      - qdrant_storage:/qdrant/storage
-    restart: unless-stopped
-
-  app:
-    build: .
-    container_name: emoji-siglip-app
-    ports:
-      - "8015:8000"
-    environment:
-      - QDRANT_HOST=qdrant
-      - QDRANT_PORT=6333
-      - PYTHONUNBUFFERED=1
-    volumes:
-      - ./app:/app/app
-      - ./img-apple-160:/app/img-apple-160:ro
-      - ./emoji.json:/app/emoji.json:ro
-      - hf_cache:/root/.cache/huggingface
-    depends_on:
-      - qdrant
-    restart: unless-stopped
 
   postgres:
     image: postgres:15-alpine
@@ -96,7 +72,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  qdrant_storage:
-  hf_cache:
   postgres_data:
   grafana_data:
