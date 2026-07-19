@@ -43,7 +43,7 @@ export default function App() {
 
   const [isSignUp, setIsSignUp] = useState(false);
   const [allEmojis, setAllEmojis] = useState([]);
-  const [emojiSearch, setEmojiSearch] = useState('');
+  const [typedEmoji, setTypedEmoji] = useState('');
   const [generatedInvite, setGeneratedInvite] = useState(null);
 
   // Refs
@@ -373,25 +373,7 @@ export default function App() {
     }
   }, [token]);
 
-  // Filter emojis based on search query
-  const getEmojisToDisplay = () => {
-    if (!emojiSearch.trim()) {
-      // Default common emojis
-      const defaults = ['🔥', '👾', '🍕', '🍻', '🎉', '⚽', '🎒', '🍿', '☕', '🌟', '🌮', '🎭', '🎸', '🎮', '🌈', '🛹', '🎳', '🍺', '🍟', '🍩', '🥑', '🎈', '❤️', '🐱', '🐶', '🚀', '🚗', '💡', '💰', '🔑'];
-      const matchedDefaults = allEmojis.filter(e => defaults.includes(e.char));
-      if (matchedDefaults.length > 0) return matchedDefaults;
-      return defaults.map(c => ({ char: c, name: '', short_name: '' }));
-    }
-
-    const query = emojiSearch.toLowerCase().trim();
-    return allEmojis
-      .filter(e => 
-        e.name.toLowerCase().includes(query) || 
-        e.short_name.toLowerCase().includes(query) || 
-        e.category.toLowerCase().includes(query)
-      )
-      .slice(0, 60); // limit to prevent DOM lag
-  };
+  // Keyboard entry for emoji
 
   // Drop Emoji
   const handleDropEmoji = async (emoji) => {
@@ -879,35 +861,36 @@ export default function App() {
             <input
               type="text"
               className="form-input"
-              style={{ padding: '8px 12px', fontSize: '0.85rem', marginBottom: 12 }}
-              placeholder="Search all emojis (e.g. cat, heart, beer)..."
-              value={emojiSearch}
-              onChange={(e) => setEmojiSearch(e.target.value)}
+              style={{ padding: '12px', fontSize: '2rem', textAlign: 'center', marginBottom: 12, height: '80px' }}
+              placeholder="Paste 1 emoji..."
+              value={typedEmoji}
+              onChange={(e) => setTypedEmoji(e.target.value)}
             />
 
-            <div className="emoji-grid" style={{ flex: 1, overflowY: 'auto', maxHeight: '240px' }}>
-              {getEmojisToDisplay().length === 0 ? (
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', gridColumn: 'span 6', textAlign: 'center', padding: 20 }}>
-                  No emojis match your search.
-                </div>
-              ) : (
-                getEmojisToDisplay().map((em) => (
-                  <button 
-                    key={em.char} 
-                    className="emoji-picker-btn" 
-                    onClick={() => handleDropEmoji(em.char)}
-                    title={em.name || em.short_name}
-                  >
-                    {em.char}
-                  </button>
-                ))
-              )}
-            </div>
+            <button 
+              className="btn-primary" 
+              onClick={() => {
+                const char = typedEmoji.trim();
+                const chars = Array.from(char);
+                if (chars.length !== 1) {
+                  alert('Please enter exactly ONE emoji.');
+                  return;
+                }
+                if (!isEmojiOnly(char)) {
+                  alert('Please enter an emoji, not text.');
+                  return;
+                }
+                handleDropEmoji(char);
+                setTypedEmoji('');
+              }}
+            >
+              Drop Pin <Compass size={16} />
+            </button>
             
             <button
               className="btn-sm btn-reject"
               style={{ marginTop: 12 }}
-              onClick={() => { setShowDropPicker(false); setEmojiSearch(''); }}
+              onClick={() => { setShowDropPicker(false); setTypedEmoji(''); }}
             >
               Cancel
             </button>
