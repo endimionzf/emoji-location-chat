@@ -1,0 +1,12 @@
+numpy<2.0.0
+torch
+transformers
+pillow
+qdrant-client
+umap-learn
+scikit-learn
+fastapi
+uvicorn[standard]
+jinja2
+tqdm
+pandas

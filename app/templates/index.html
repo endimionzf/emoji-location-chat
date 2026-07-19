@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emoji SigLIP 2 Space</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <!-- Plotly.js for 2D/3D Visualization -->
+  <script src="https://cdn.plot.ly/plotly-2.29.1.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-area">
+        <div class="app-title">Emoji SigLIP 2 Vector Space</div>
+        <div class="app-subtitle">Qdrant + UMAP 2D / 3D Projection</div>
+      </div>
+      <div class="stats-bar" id="statsBar">
+        <span class="stat-badge">Points: <strong id="totalPoints">--</strong></span>
+        <span class="stat-badge">Model: <strong>SigLIP 2 (768d)</strong></span>
+        <span class="stat-badge">Vector DB: <strong>Qdrant</strong></span>
+      </div>
+    </header>
+
+    <!-- Content Layout -->
+    <div class="main-layout">
+      <!-- Sidebar Controls -->
+      <aside class="sidebar">
+        <div class="control-group">
+          <label class="label">Projection Mode</label>
+          <div class="toggle-buttons">
+            <button id="btn2D" class="toggle-btn active" onclick="switchView('2d')">2D UMAP</button>
+            <button id="btn3D" class="toggle-btn" onclick="switchView('3d')">3D UMAP</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="label" for="searchInput">Semantic Vector Search</label>
+          <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search (e.g. 'happy cat', 'space rocket')..." onkeydown="if(event.key === 'Enter') handleSearch()" />
+            <button class="search-btn" onclick="handleSearch()">Search</button>
+          </div>
+          <button id="clearSearchBtn" class="clear-btn hidden" onclick="resetSearch()">Clear Search</button>
+        </div>
+
+        <div class="control-group">
+          <label class="label" for="categorySelect">Filter by Category</label>
+          <select id="categorySelect" onchange="applyFilters()">
+            <option value="ALL">All Categories</option>
+          </select>
+        </div>
+
+        <!-- Selected Emoji Preview Box -->
+        <div class="inspection-panel" id="inspectionPanel">
+          <div class="panel-header">Emoji Inspector</div>
+          <div class="panel-body" id="inspectorBody">
+            <div class="empty-state">Click or hover over any point in the plot to inspect emoji details.</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Plot Canvas -->
+      <main class="plot-container">
+        <div id="loadingOverlay" class="loading-overlay">
+          <div class="spinner"></div>
+          <div class="loading-text" id="loadingText">Loading vectors from Qdrant...</div>
+        </div>
+        <div id="plotlyChart" class="plotly-canvas"></div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

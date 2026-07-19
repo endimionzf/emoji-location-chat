@@ -1,0 +1,17 @@
+build/apple/apple_color_emoji_*.ttf
+build/apple/apple_color_emoji_*.ttc
+build/windows10/seguiemj.ttf
+packages/
+
+# Ignore all image directories except img-apple-160
+img-*/
+!img-apple-160/
+
+# Ignore sheets
+sheets-*/
+sheet_*.png
+
+# Ignore storage
+postgres_data/
+grafana_data/
+hf_cache/
