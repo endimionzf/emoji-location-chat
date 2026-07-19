@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogOut, Send, Plus, MessageSquare, Compass, ShieldAlert, FileText, CheckCircle2 } from 'lucide-react';
+import { LogOut, Send, Plus, MessageSquare, Compass, ShieldAlert, FileText, CheckCircle2, Info } from 'lucide-react';
 import MapView from './components/MapView';
 import RequestList from './components/RequestList';
 import ChatPanel from './components/ChatPanel';
@@ -703,9 +703,50 @@ export default function App() {
           >
             <MessageSquare size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} /> Chats
           </button>
+          <button
+            className={`sidebar-tab ${activeTab === 'about' ? 'active' : ''}`}
+            onClick={() => setActiveTab('about')}
+          >
+            <Info size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} /> About
+          </button>
         </nav>
 
         <div className="sidebar-content">
+          {activeTab === 'about' && (
+            <div style={{ padding: '10px 0', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <h2 style={{ fontSize: '1.4rem', background: 'linear-gradient(135deg, #fff 0%, #8b9bb4 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                Welcome to Emoji Chat! 🌍
+              </h2>
+              
+              <div className="request-card" style={{ cursor: 'default' }}>
+                <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1.3rem' }}>📍</span> Drop an Emoji
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                  Use the <strong>+</strong> button on the map to pin a single emoji at your current location. Other users will see it on their map!
+                </p>
+              </div>
+
+              <div className="request-card" style={{ cursor: 'default' }}>
+                <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1.3rem' }}>🤝</span> Connect
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                  Tap someone else's emoji on the map to send them a chat request. If they accept, you will be connected!
+                </p>
+              </div>
+
+              <div className="request-card" style={{ cursor: 'default' }}>
+                <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1.3rem' }}>📏</span> 100 Meter Rule
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                  You can only send messages if you are physically within <strong>100 meters</strong> of the other user! Walk closer if the chat is blocked!
+                </p>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'map' && (
             <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', marginTop: 20 }}>
               Use the map to find emoji drops and connect with users!
