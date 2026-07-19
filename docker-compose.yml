@@ -31,7 +31,6 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./backend/src:/app/src
       - ./emoji.json:/app/emoji.json:ro
     restart: unless-stopped
 
@@ -40,8 +39,6 @@ services:
     container_name: emoji-chat-frontend
     environment:
       - VITE_API_URL=http://localhost:3000
-    volumes:
-      - ./frontend/src:/app/src
     restart: unless-stopped
 
   grafana:
