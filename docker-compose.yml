@@ -22,13 +22,6 @@ services:
       - ./img-apple-160:/app/img-apple-160:ro
       - ./emoji.json:/app/emoji.json:ro
       - hf_cache:/root/.cache/huggingface
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     depends_on:
       - qdrant
     restart: unless-stopped
@@ -91,12 +84,11 @@ services:
     restart: unless-stopped
 
   nginx:
-    image: nginx:alpine
+    build: ./nginx
     container_name: emoji-chat-nginx
     ports:
       - "1234:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./img-apple-160:/usr/share/nginx/html/images:ro
     depends_on:
       - backend
