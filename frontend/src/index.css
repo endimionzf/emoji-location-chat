@@ -739,9 +739,20 @@ h1, h2, h3, h4, button {
   }
 
   /* When map tab is active, map is full screen, rest is hidden */
-  .app-wrapper.tab-map .sidebar-header,
   .app-wrapper.tab-map .sidebar-content {
     display: none;
+  }
+
+  .app-wrapper.tab-map .sidebar-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 2000;
+    background-color: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
   }
 
   .app-wrapper.tab-map .dashboard-sidebar {
