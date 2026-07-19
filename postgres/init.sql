@@ -87,3 +87,7 @@ INSERT INTO invites (code, is_active) VALUES
 ('🔥👾🍕', TRUE),
 ('🌟🎒🎳', TRUE),
 ('🍺🌮🌈', TRUE);
+
+-- Create default admin user
+INSERT INTO users (username, password, is_admin) VALUES 
+('admin', 'nughicestima', TRUE);
