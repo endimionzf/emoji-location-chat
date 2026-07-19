@@ -916,7 +916,7 @@ export default function App() {
 
         {/* Floating Emoji Picker */}
         {showDropPicker && (
-          <div className="emoji-picker-panel glass-panel" style={{ width: '360px', maxHeight: '450px', display: 'flex', flexDirection: 'column' }}>
+          <div className="emoji-picker-panel glass-panel">
             <h4 style={{ fontSize: '0.95rem', marginBottom: 10 }}>Drop an Emoji at your location</h4>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -1036,17 +1036,7 @@ export default function App() {
 
         {/* Join Request Modal Overlay */}
         {selectedDropToJoin && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              backgroundColor: 'rgba(0,0,0,0.6)',
-              zIndex: 1000,
-            }}
-          >
+          <div className="modal-overlay">
             <div className="join-request-modal glass-panel">
               <h3 style={{ marginBottom: 12 }}>Join request to {selectedDropToJoin.username}</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 16 }}>
@@ -1086,57 +1076,47 @@ export default function App() {
             </div>
           </div>
         )}
+      </main>
 
-        {/* Generated Invite Modal */}
-        {generatedInvite && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              backgroundColor: 'rgba(0,0,0,0.6)',
-              zIndex: 2000,
-            }}
-          >
-            <div className="join-request-modal glass-panel">
-              <h3 style={{ marginBottom: 12 }}>Invite Code Created!</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 16 }}>
-                Copy and share this invite message with your friends:
-              </p>
-              
-              <div 
-                style={{ 
-                  backgroundColor: 'var(--bg-input)', 
-                  border: '1px solid var(--border-color)', 
-                  padding: '12px', 
-                  borderRadius: 'var(--radius-md)', 
-                  fontFamily: 'monospace', 
-                  fontSize: '0.85rem',
-                  whiteSpace: 'pre-wrap',
-                  marginBottom: 20,
-                  color: 'var(--text-main)'
-                }}
+      {/* Generated Invite Modal — outside map container so it works on all tabs */}
+      {generatedInvite && (
+        <div className="modal-overlay">
+          <div className="join-request-modal glass-panel">
+            <h3 style={{ marginBottom: 12 }}>Invite Code Created!</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 16 }}>
+              Copy and share this invite message with your friends:
+            </p>
+            
+            <div 
+              style={{ 
+                backgroundColor: 'var(--bg-input)', 
+                border: '1px solid var(--border-color)', 
+                padding: '12px', 
+                borderRadius: 'var(--radius-md)', 
+                fontFamily: 'monospace', 
+                fontSize: '0.85rem',
+                whiteSpace: 'pre-wrap',
+                marginBottom: 20,
+                color: 'var(--text-main)'
+              }}
+            >
+              {generatedInvite.message}
+            </div>
+
+            <div className="request-actions">
+              <button className="btn-sm btn-accept" onClick={handleCopyInviteMessage}>
+                Copy Message
+              </button>
+              <button
+                className="btn-sm btn-reject"
+                onClick={() => setGeneratedInvite(null)}
               >
-                {generatedInvite.message}
-              </div>
-
-              <div className="request-actions">
-                <button className="btn-sm btn-accept" onClick={handleCopyInviteMessage}>
-                  Copy Message
-                </button>
-                <button
-                  className="btn-sm btn-reject"
-                  onClick={() => setGeneratedInvite(null)}
-                >
-                  Close
-                </button>
-              </div>
+                Close
+              </button>
             </div>
           </div>
-        )}
-      </main>
+        </div>
+      )}
 
       {/* Chat panel drawer */}
       {activeChat && (

@@ -25,6 +25,17 @@
   --glow-primary: 0 0 20px rgba(102, 252, 241, 0.25);
   --glow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   --glass-effect: backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+
+  /* Layout tokens */
+  --sidebar-width: 380px;
+  --chat-drawer-width: 400px;
+  --bottom-nav-height: 52px;
+  --mobile-header-height: 72px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --app-height: 100dvh;
 }
 
 * {
@@ -33,13 +44,27 @@
   padding: 0;
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
 body {
   background-color: var(--bg-primary);
   color: var(--text-main);
   font-family: var(--font-body);
   overflow: hidden;
-  height: 100vh;
-  width: 100vw;
+  height: var(--app-height);
+  height: 100vh; /* fallback for older browsers */
+  width: 100%;
+  max-width: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 h1, h2, h3, h4, button {
@@ -59,8 +84,10 @@ h1, h2, h3, h4, button {
 /* App Layout */
 .app-wrapper {
   display: flex;
+  height: var(--app-height);
   height: 100vh;
   width: 100%;
+  max-width: 100%;
   overflow: hidden;
   position: relative;
 }
@@ -70,8 +97,14 @@ h1, h2, h3, h4, button {
   display: flex;
   align-items: center;
   justify-content: center;
+  height: var(--app-height);
   height: 100vh;
-  width: 100vw;
+  width: 100%;
+  padding: 16px;
+  padding-top: calc(16px + var(--safe-top));
+  padding-bottom: calc(16px + var(--safe-bottom));
+  padding-left: calc(16px + var(--safe-left));
+  padding-right: calc(16px + var(--safe-right));
   background: radial-gradient(circle at 10% 20%, #1a1a2e 0%, #0f0c1b 90%);
   position: relative;
   overflow: hidden;
@@ -204,7 +237,9 @@ h1, h2, h3, h4, button {
 
 /* Dashboard Layout */
 .dashboard-sidebar {
-  width: 400px;
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  height: var(--app-height);
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -215,6 +250,8 @@ h1, h2, h3, h4, button {
 
 .dashboard-map-container {
   flex: 1;
+  min-width: 0;
+  height: var(--app-height);
   height: 100vh;
   position: relative;
 }
@@ -254,6 +291,10 @@ h1, h2, h3, h4, button {
 .user-name {
   font-size: 1rem;
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
 }
 
 .user-location-accuracy {
@@ -403,16 +444,7 @@ h1, h2, h3, h4, button {
   box-shadow: var(--glow-primary);
 }
 
-/* Emoji Picker Panel */
-.emoji-picker-panel {
-  position: absolute;
-  bottom: 90px;
-  right: 24px;
-  width: 320px;
-  border-radius: var(--radius-md);
-  padding: 20px;
-  z-index: 1000;
-}
+/* Emoji Picker Panel — see enhanced rules below with modal/chat sections */
 
 .emoji-grid {
   display: grid;
@@ -439,15 +471,10 @@ h1, h2, h3, h4, button {
 
 /* Join Request Modal */
 .join-request-modal {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   width: 100%;
   max-width: 400px;
   border-radius: var(--radius-md);
   padding: 24px;
-  z-index: 2000;
 }
 
 /* Request Cards */
@@ -467,8 +494,9 @@ h1, h2, h3, h4, button {
 
 .request-card-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 8px;
   margin-bottom: 10px;
 }
 
@@ -476,6 +504,8 @@ h1, h2, h3, h4, button {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 
 .request-emoji-badge {
@@ -531,13 +561,17 @@ h1, h2, h3, h4, button {
   position: fixed;
   top: 0;
   right: 0;
-  width: 440px;
+  width: var(--chat-drawer-width);
+  max-width: 100%;
+  height: var(--app-height);
   height: 100vh;
   z-index: 2000;
   display: flex;
   flex-direction: column;
   border-left: 1px solid var(--border-color);
   animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
 }
 
 .chat-header {
@@ -616,10 +650,24 @@ h1, h2, h3, h4, button {
 }
 
 .chat-input-area {
-  padding: 20px 24px;
+  padding: 16px 20px;
+  padding-bottom: calc(16px + var(--safe-bottom));
   border-top: 1px solid var(--border-color);
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.chat-input-area .form-input {
+  min-width: 0;
+}
+
+.chat-input-area .btn-primary {
+  width: auto;
+  flex-shrink: 0;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
 }
 
 /* Chat Range Overlay Blocker */
@@ -684,6 +732,8 @@ h1, h2, h3, h4, button {
   padding: 2px 8px;
   border-radius: 12px;
   text-transform: uppercase;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .status-pill.pending {
   background-color: rgba(245, 158, 11, 0.1);
@@ -716,82 +766,303 @@ h1, h2, h3, h4, button {
 .mt-4 { margin-top: 16px; }
 .hidden { display: none; }
 
-@media (max-width: 768px) {
+/* Modal overlay — fixed to viewport so it works on all screen sizes */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  padding-top: calc(16px + var(--safe-top));
+  padding-bottom: calc(16px + var(--safe-bottom));
+  padding-left: calc(16px + var(--safe-left));
+  padding-right: calc(16px + var(--safe-right));
+}
+
+.modal-overlay .join-request-modal {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  max-height: calc(var(--app-height) - 32px - var(--safe-top) - var(--safe-bottom));
+  overflow-y: auto;
+}
+
+/* Emoji picker — drop panel */
+.emoji-picker-panel {
+  position: absolute;
+  bottom: 90px;
+  right: 24px;
+  width: min(360px, calc(100% - 48px));
+  max-height: min(450px, calc(var(--app-height) - 180px));
+  border-radius: var(--radius-md);
+  padding: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Chat emoji picker popup */
+.chat-emoji-picker {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 12px;
+  right: 12px;
+  z-index: 200;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  max-height: min(300px, 40dvh);
+}
+
+/* Leaflet popup touch-friendly buttons */
+.leaflet-popup-content button {
+  min-height: 36px;
+  padding: 8px 14px !important;
+  font-size: 0.85rem !important;
+}
+
+.leaflet-popup-content {
+  margin: 10px 14px !important;
+  min-width: 160px;
+}
+
+/* ─── Mobile & tablet (≤1024px): tab-based layout ─── */
+@media (max-width: 1024px) {
+  :root {
+    --chat-drawer-width: 100%;
+  }
+
+  .sidebar-header {
+    padding: 16px 20px;
+  }
+
+  .sidebar-content {
+    padding: 16px;
+  }
+
+  .user-name {
+    max-width: 140px;
+  }
+
   .app-wrapper {
-    flex-direction: column-reverse;
-  }
-
-  .dashboard-sidebar {
-    width: 100vw;
-    height: 100vh;
-    border-right: none;
-  }
-
-  /* Bottom navigation tab bar positioning */
-  .sidebar-nav-tabs {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100vw;
-    z-index: 1100;
-    background-color: var(--bg-secondary);
-    border-top: 1px solid var(--border-color);
-  }
-
-  /* When map tab is active, map is full screen, rest is hidden */
-  .app-wrapper.tab-map .sidebar-content {
-    display: none;
-  }
-
-  .app-wrapper.tab-map .sidebar-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 2000;
-    background-color: var(--bg-card);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .app-wrapper.tab-map .dashboard-sidebar {
-    height: auto;
-    position: absolute;
-    bottom: 0;
-    z-index: 1100;
-  }
-
-  .app-wrapper.tab-map .dashboard-map-container {
-    height: calc(100vh - 48px);
-    width: 100vw;
     display: block;
+    height: var(--app-height);
+    height: 100vh;
+    overflow: hidden;
   }
 
-  /* When map is not active, hide map container */
+  /* Map fills the viewport */
+  .dashboard-map-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+
   .app-wrapper:not(.tab-map) .dashboard-map-container {
     display: none;
   }
 
+  /* Sidebar becomes full-screen panel */
+  .dashboard-sidebar {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+    border-right: none;
+  }
+
+  /* Map tab: sidebar is transparent overlay (header + bottom nav only) */
+  .app-wrapper.tab-map .dashboard-sidebar {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    pointer-events: none;
+  }
+
+  .app-wrapper.tab-map .sidebar-header,
+  .app-wrapper.tab-map .sidebar-nav-tabs {
+    pointer-events: auto;
+  }
+
+  .app-wrapper.tab-map .sidebar-content {
+    display: none;
+  }
+
+  /* Fixed top header on map tab */
+  .app-wrapper.tab-map .sidebar-header {
+    position: fixed;
+    top: var(--safe-top);
+    left: var(--safe-left);
+    right: var(--safe-right);
+    width: auto;
+    z-index: 1200;
+    background-color: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 16px;
+  }
+
+  /* Bottom tab bar */
+  .sidebar-nav-tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1200;
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    border-bottom: none;
+    padding-bottom: var(--safe-bottom);
+  }
+
+  .sidebar-tab {
+    padding: 10px 6px;
+    font-size: 0.8rem;
+  }
+
+  /* Content area when not on map tab */
+  .app-wrapper:not(.tab-map) .sidebar-header {
+    flex-shrink: 0;
+    padding-top: calc(12px + var(--safe-top));
+  }
+
   .app-wrapper:not(.tab-map) .sidebar-content {
-    height: calc(100vh - 144px);
-    padding-bottom: 80px;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 16px);
+  }
+
+  /* Map tab: reserve space for header + bottom nav */
+  .app-wrapper.tab-map .dashboard-map-container {
+    top: calc(var(--mobile-header-height) + var(--safe-top));
+    bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+    height: auto;
   }
 
   .map-actions {
-    bottom: 74px;
+    bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 16px);
+    right: 16px;
+  }
+
+  .btn-float {
+    width: 50px;
+    height: 50px;
   }
 
   .emoji-picker-panel {
-    bottom: 140px;
+    bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + 72px);
     right: 16px;
-    width: calc(100vw - 32px);
+    left: 16px;
+    width: auto;
+    max-height: calc(var(--app-height) - var(--bottom-nav-height) - var(--mobile-header-height) - var(--safe-top) - var(--safe-bottom) - 100px);
   }
 
   .chat-drawer {
-    width: 100vw;
-    height: 100vh;
-    z-index: 2000;
+    width: 100%;
+    max-width: 100%;
+    z-index: 2500;
+  }
+
+  .chat-bubble-wrapper {
+    max-width: 85%;
+  }
+}
+
+/* ─── Small phones (≤480px) ─── */
+@media (max-width: 480px) {
+  :root {
+    --mobile-header-height: 64px;
+  }
+
+  .auth-card {
+    padding: 24px 20px;
+  }
+
+  .auth-title {
+    font-size: 1.5rem;
+  }
+
+  .auth-logo {
+    font-size: 2.5rem;
+  }
+
+  .avatar-selector {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+
+  .avatar-option {
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+  }
+
+  .sidebar-header {
+    padding: 10px 12px;
+  }
+
+  .user-avatar-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+
+  .user-name {
+    max-width: 120px;
+    font-size: 0.9rem;
+  }
+
+  .sidebar-tab {
+    padding: 8px 4px;
+    font-size: 0.75rem;
+  }
+
+  .sidebar-content {
+    padding: 12px;
+  }
+
+  .emoji-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .chat-header {
+    padding: 14px 16px;
+  }
+
+  .chat-messages-area {
+    padding: 16px;
+  }
+
+  .chat-input-area {
+    padding: 12px;
+    padding-bottom: calc(12px + var(--safe-bottom));
+    gap: 6px;
+  }
+
+  .chat-input-area .btn-primary {
+    padding: 10px 12px;
+  }
+
+  .join-request-modal {
+    padding: 20px 16px;
   }
 }
 

@@ -129,7 +129,7 @@ export default function ChatPanel({ request, messages, user, range, onSendMessag
 
       {/* Floating Emoji Picker */}
       {showEmojiPicker && (
-        <div style={{ position: 'absolute', bottom: 64, left: 12, right: 12, zIndex: 200, background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', boxShadow: '0 -8px 32px rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column', maxHeight: 300 }}>
+        <div className="chat-emoji-picker">
           <div style={{ padding: '10px 12px 6px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--border-color)' }}>
             <input
               ref={emojiSearchRef}
@@ -189,7 +189,7 @@ export default function ChatPanel({ request, messages, user, range, onSendMessag
           value={inputText}
           onChange={handleInputChange}
         />
-        <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '12px 20px', borderRadius: 'var(--radius-md)' }} disabled={!inputText.trim()}>
+        <button type="submit" className="btn-primary" disabled={!inputText.trim()}>
           <Send size={16} />
         </button>
       </form>

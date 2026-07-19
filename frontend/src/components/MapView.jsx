@@ -13,6 +13,28 @@ function RecenterMap({ location }) {
   return null;
 }
 
+// Invalidate map size when viewport/container changes (mobile orientation, tab switch)
+function MapResizeHandler() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const invalidate = () => {
+      map.invalidateSize({ animate: false });
+    };
+    invalidate();
+    const ro = new ResizeObserver(invalidate);
+    ro.observe(container);
+    window.addEventListener('orientationchange', invalidate);
+    window.visualViewport?.addEventListener('resize', invalidate);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('orientationchange', invalidate);
+      window.visualViewport?.removeEventListener('resize', invalidate);
+    };
+  }, [map]);
+  return null;
+}
+
 export default function MapView({ myLocation, emojiDrops, userId, onDropSelect, onDeleteDrop, acceptedRequests = [], onChatSelect }) {
   // Center defaults to London or coordinates if myLocation is null
   const defaultCenter = myLocation ? [myLocation.lat, myLocation.lng] : [51.505, -0.09];
@@ -135,6 +157,7 @@ export default function MapView({ myLocation, emojiDrops, userId, onDropSelect, 
         })}
 
         {myLocation && <RecenterMap location={myLocation} />}
+        <MapResizeHandler />
       </MapContainer>
     </div>
   );
