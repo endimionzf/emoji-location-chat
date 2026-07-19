@@ -43,8 +43,11 @@ export default function App() {
 
   const [isSignUp, setIsSignUp] = useState(false);
   const [allEmojis, setAllEmojis] = useState([]);
-  const [typedEmoji, setTypedEmoji] = useState('');
+  const [selectedDropEmoji, setSelectedDropEmoji] = useState('');
+  const [dropEmojiSearch, setDropEmojiSearch] = useState('');
   const [generatedInvite, setGeneratedInvite] = useState(null);
+
+  const quickDropEmojis = ['🔥', '👾', '🍕', '🍻', '🎉', '⚽', '🎒', '🍿', '☕', '🌟', '🌮', '🎭', '🎸', '🎮', '🌈', '🛹', '🎳', '🍺'];
 
   // Refs
   const wsRef = useRef(null);
@@ -388,15 +391,23 @@ export default function App() {
     }
   }, [token]);
 
-  // Keyboard entry for emoji
+  const filteredDropEmojis = allEmojis.filter(
+    (e) =>
+      !dropEmojiSearch ||
+      (e.name && e.name.toLowerCase().includes(dropEmojiSearch.toLowerCase())) ||
+      (e.short_name && e.short_name.toLowerCase().includes(dropEmojiSearch.toLowerCase()))
+  );
 
-  // Drop Emoji
-  const handleDropEmoji = async (emoji) => {
+  const handleDropEmoji = async () => {
+    if (!selectedDropEmoji) {
+      alert('Please select an emoji first.');
+      return;
+    }
     if (!myLocation) {
       alert('Cannot drop emoji: Coordinates not available.');
       return;
     }
-    setShowDropPicker(false);
+
     try {
       const res = await fetch(`${API_BASE}/emoji-drops`, {
         method: 'POST',
@@ -405,29 +416,34 @@ export default function App() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          emoji,
+          emoji: selectedDropEmoji,
           latitude: myLocation.lat,
           longitude: myLocation.lng,
           accuracy: locationAccuracy,
           duration_hours: dropDuration,
         }),
       });
+
+      const data = await res.json().catch(() => ({}));
+
       if (res.ok) {
-        const drop = await res.json();
-        // Add to local state immediately
         setEmojiDrops((prev) => [
           {
-            ...drop,
+            ...data,
             username: user.username,
             avatar_url: user.avatar_url,
           },
           ...prev,
         ]);
+        setShowDropPicker(false);
+        setSelectedDropEmoji('');
+        setDropEmojiSearch('');
       } else {
-        alert('Failed to drop emoji');
+        alert(data.error || 'Failed to drop emoji');
       }
     } catch (err) {
       console.error(err);
+      alert('Server connection error. Please try again.');
     }
   };
 
@@ -881,7 +897,19 @@ export default function App() {
 
         {/* Floating Action Buttons */}
         <div className="map-actions">
-          <button className="btn-float" onClick={() => setShowDropPicker(!showDropPicker)} title="Drop Emoji Here">
+          <button
+            className="btn-float"
+            onClick={() => {
+              setShowDropPicker((open) => {
+                if (open) {
+                  setSelectedDropEmoji('');
+                  setDropEmojiSearch('');
+                }
+                return !open;
+              });
+            }}
+            title="Drop Emoji Here"
+          >
             <Plus size={24} />
           </button>
         </div>
@@ -914,39 +942,92 @@ export default function App() {
               ))}
             </div>
 
+            <div
+              style={{
+                minHeight: 56,
+                marginBottom: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '2.4rem',
+                background: 'var(--bg-input)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-md)',
+              }}
+            >
+              {selectedDropEmoji || '👆'}
+            </div>
+
             <input
               type="text"
               className="form-input"
-              style={{ padding: '12px', fontSize: '2rem', textAlign: 'center', marginBottom: 12, height: '80px' }}
-              placeholder="Paste 1 emoji..."
-              value={typedEmoji}
-              onChange={(e) => setTypedEmoji(e.target.value)}
+              style={{ padding: '8px 10px', fontSize: '0.85rem', marginBottom: 10 }}
+              placeholder="Search emojis..."
+              value={dropEmojiSearch}
+              onChange={(e) => setDropEmojiSearch(e.target.value)}
             />
 
-            <button 
-              className="btn-primary" 
-              onClick={() => {
-                const char = typedEmoji.trim();
-                const chars = Array.from(char);
-                if (chars.length !== 1) {
-                  alert('Please enter exactly ONE emoji.');
-                  return;
-                }
-                if (!isEmojiOnly(char)) {
-                  alert('Please enter an emoji, not text.');
-                  return;
-                }
-                handleDropEmoji(char);
-                setTypedEmoji('');
-              }}
+            {!dropEmojiSearch && (
+              <div style={{ display: 'flex', gap: 4, marginBottom: 10, overflowX: 'auto', flexShrink: 0 }}>
+                {quickDropEmojis
+                  .filter((em) => allEmojis.length === 0 || allEmojis.some((e) => e.char === em))
+                  .map((em) => (
+                    <button
+                      key={em}
+                      type="button"
+                      className="emoji-picker-btn"
+                      style={{
+                        background: selectedDropEmoji === em ? 'rgba(99,102,241,0.25)' : 'none',
+                        border: selectedDropEmoji === em ? '1px solid var(--primary)' : '1px solid transparent',
+                      }}
+                      onClick={() => setSelectedDropEmoji(em)}
+                    >
+                      {em}
+                    </button>
+                  ))}
+              </div>
+            )}
+
+            <div className="emoji-grid" style={{ maxHeight: 180, marginTop: 0, marginBottom: 12 }}>
+              {filteredDropEmojis.length === 0 ? (
+                <div style={{ gridColumn: 'span 6', color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center', padding: 12 }}>
+                  {allEmojis.length === 0 ? 'Loading emojis...' : 'No emojis found'}
+                </div>
+              ) : (
+                filteredDropEmojis.slice(0, 300).map((em) => (
+                  <button
+                    key={em.char}
+                    type="button"
+                    title={em.name || em.short_name}
+                    className="emoji-picker-btn"
+                    style={{
+                      background: selectedDropEmoji === em.char ? 'rgba(99,102,241,0.25)' : 'none',
+                      border: selectedDropEmoji === em.char ? '1px solid var(--primary)' : '1px solid transparent',
+                    }}
+                    onClick={() => setSelectedDropEmoji(em.char)}
+                  >
+                    {em.char}
+                  </button>
+                ))
+              )}
+            </div>
+
+            <button
+              className="btn-primary"
+              onClick={handleDropEmoji}
+              disabled={!selectedDropEmoji}
             >
               Drop Pin <Compass size={16} />
             </button>
-            
+
             <button
               className="btn-sm btn-reject"
               style={{ marginTop: 12 }}
-              onClick={() => { setShowDropPicker(false); setTypedEmoji(''); }}
+              onClick={() => {
+                setShowDropPicker(false);
+                setSelectedDropEmoji('');
+                setDropEmojiSearch('');
+              }}
             >
               Cancel
             </button>
